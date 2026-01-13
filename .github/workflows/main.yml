@@ -1,0 +1,43 @@
+name: Build React on Tag Push
+
+on:
+  push:
+    tags:
+      - 'baseline-*'
+      - 'v*'
+
+permissions:
+  contents: write   # 允许创建 Release + 上传 Assets
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm install
+          
+      - name: Build React App
+        run: npm run build
+
+      # 把 build 目录压缩成 zip
+      - name: Zip build files
+        run: |
+          cd build
+          zip -r ../react-build.zip .
+          
+      - name: Upload React Build to GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: react-build.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
